@@ -1,16 +1,39 @@
-// 取得產品列表
+//產品列表
+const productList = document.querySelector(".productWrap");
+let productData = [];
+
+function init() {
+  let str = "";
+  productData.forEach((Item) => {
+    str += `<li class="productCard">
+<h4 class="productType">新品</h4>
+<img
+  src="${Item.images} "
+  alt=""
+/>
+<a href="#" class="addCardBtn">加入購物車</a>
+<h3>${Item.title}</h3>
+<del class="originPrice">NT$${Item.origin_price}</del>
+<p class="nowPrice">NT$${Item.price}</p>
+</li>`;
+  });
+  productList.innerHTML = str;
+}
+
 function getProductList() {
   axios
     .get(
       `https://livejs-api.hexschool.io/api/livejs/v1/customer/${api_path}/products`
     )
     .then(function (response) {
-      console.log(response.data);
+      productData = response.data.products;
+      init();
     })
     .catch(function (error) {
       console.log(error.response.data);
     });
 }
+getProductList();
 
 // 加入購物車
 function addCartItem() {
