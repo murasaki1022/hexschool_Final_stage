@@ -91,7 +91,7 @@ productList.addEventListener("click", function (e) {
     .then(function (response) {
       console.log(response.data);
       Swal.fire({
-        title: "加入購物車成功！",
+        title: "加入購物車成功!",
         icon: "success",
       });
       getCartList();
@@ -208,61 +208,31 @@ discardAllBtn.addEventListener("click", function (e) {
 const orderInfoBtn = document.querySelector(".orderInfo-btn");
 orderInfoBtn.addEventListener("click", function (e) {
   e.preventDefault();
-  if (cartData.length == 0) {
-    Swal.fire({
-      icon: "error",
-      title: "送出失敗",
-      text: "購物車是空的，請加入商品！",
-    });
-    return;
+  if (cartData.length === 0) {
   }
-  const customerName = document.querySelector("#customerName").value;
-  const customerPhone = document.querySelector("#customerPhone").value;
-  const customerEmail = document.querySelector("#customerEmail").value;
-  const customerAddress = document.querySelector("#customerAddress").value;
-  const customerTradeWay = document.querySelector("#tradeWay").value;
+});
 
-  if (
-    customerName == "" ||
-    customerPhone == "" ||
-    customerEmail == "" ||
-    customerAddress == "" ||
-    customerTradeWay == ""
-  ) {
-    Swal.fire({
-      icon: "error",
-      title: "送出失敗",
-      text: "請填寫預訂資料！",
-    });
-    return;
-  }
+// 送出購買訂單
+function createOrder() {
   axios
     .post(
       `https://livejs-api.hexschool.io/api/livejs/v1/customer/${api_path}/orders`,
       {
         data: {
           user: {
-            name: customerName,
-            tel: customerPhone,
-            email: customerEmail,
-            address: customerAddress,
-            payment: customerTradeWay,
+            name: "六角學院",
+            tel: "07-5313506",
+            email: "hexschool@hexschool.com",
+            address: "高雄市六角學院路",
+            payment: "Apple Pay",
           },
         },
       }
     )
     .then(function (response) {
       console.log(response.data);
-      Swal.fire({
-        title: "訂單送出成功！",
-        icon: "success",
-      });
-      document.querySelector("#customerName").value = "";
-      document.querySelector("#customerPhone").value = "";
-      document.querySelector("#customerEmail").value = "";
-      document.querySelector("#customerAddress").value = "";
-      document.querySelector("#tradeWay").value = "ATM";
-
-      getCartList();
+    })
+    .catch(function (error) {
+      console.log(error.response.data);
     });
-});
+}
