@@ -6,6 +6,39 @@ function init() {
 }
 init();
 
+//C3圖表
+function renderC3() {
+  //物件資料蒐集
+  let total = {};
+  orderData.forEach(function (item) {
+    item.products.forEach(function (productItem) {
+      if (total[productItem.category] == undefined) {
+        total[productItem.category] = productItem.price * productItem.quantity;
+      } else {
+        total[productItem.category] += productItem.price * productItem.quantity;
+      }
+    });
+  });
+
+  let categoryAry = Object.keys(total);
+  let newData = [];
+  categoryAry.forEach(function (item) {
+    let ary = [];
+    ary.push(item);
+    ary.push(total[item]);
+    newData.push(ary);
+    console.log(total);
+  });
+
+  let chart = c3.generate({
+    bindto: "#chart", // HTML 元素綁定
+    data: {
+      type: "pie",
+      columns: newData,
+    },
+  });
+}
+
 // 取得訂單列表
 function getOrderList() {
   axios
@@ -22,6 +55,12 @@ function getOrderList() {
 
       let str = "";
       orderData.forEach(function (item) {
+        //組時間字串
+        const timeStamp = new Date(item.createdAt * 1000);
+        const orderTime = `${timeStamp.getFullYear()}/${
+          timeStamp.getMonth() + 1
+        }/${timeStamp.getDate()}`;
+
         //組產品字串
         let productStr = "";
         item.products.forEach(function (productItem) {
@@ -47,9 +86,9 @@ function getOrderList() {
         <td>
           ${productStr}
         </td>
-        <td>${item.createdAt}</td>
+        <td>${orderTime}</td>
         <td class="orderStatus">
-          <a href="#" class="js-orderStatus" data-id="${item.id}">${orderStatus}</a>
+          <a href="#" data-status="${item.paid}" class="js-orderStatus" data-id="${item.id}">${orderStatus}</a>
         </td>
         <td>
           <input type="button" class="delSingleOrder-Btn js-orderDelete" data-id="${item.id}" value="刪除" />
@@ -57,34 +96,76 @@ function getOrderList() {
       </tr>`;
       });
       orderList.innerHTML = str;
+      renderC3();
     });
 }
 
+//監聽刪除/修改訂單資料
 orderList.addEventListener("click", function (e) {
   e.preventDefault();
   const targetClass = e.target.getAttribute("class");
-  console.log(targetClass);
-
+  let id = e.target.getAttribute("data-id");
   if (targetClass == "delSingleOrder-Btn js-orderDelete") {
-    alert("你點到刪除按鈕");
+    Swal.fire({
+      title: "確定刪除此筆訂單嗎?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "確定刪除",
+      cancelButtonText: "取消",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteOrderItem(id);
+        Swal.fire({
+          title: "刪除成功",
+          text: "您已將此筆訂單刪除",
+          icon: "success",
+        });
+      }
+    });
     return;
   }
   if (targetClass == "js-orderStatus") {
-    alert("你點到訂單狀態");
+    let status = e.target.getAttribute("data-status");
+    Swal.fire({
+      title: "確定更改訂單狀態?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "確定",
+      cancelButtonText: "取消",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        editOrderList(status, id);
+        Swal.fire({
+          title: "更改成功",
+          text: "訂單狀態已變更",
+          icon: "success",
+        });
+      }
+    });
+
     return;
   }
 });
 
 // 修改訂單狀態
-
-function editOrderList(orderId) {
+function editOrderList(status, id) {
+  let newStatus;
+  if (status == true) {
+    newStatus = false;
+  } else {
+    newStatus = true;
+  }
   axios
     .put(
       `https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
       {
         data: {
-          id: orderId,
-          paid: true,
+          id: id,
+          paid: newStatus,
         },
       },
       {
@@ -93,59 +174,66 @@ function editOrderList(orderId) {
         },
       }
     )
+    .then(function (response) {});
+  getOrderList();
+}
+
+// 刪除特定訂單
+function deleteOrderItem(id) {
+  axios
+    .delete(
+      `https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders/${id}`,
+      {
+        headers: {
+          Authorization: token,
+        },
+      }
+    )
     .then(function (response) {
-      console.log(response.data);
+      getOrderList();
     });
 }
 
 // 刪除全部訂單
-function deleteAllOrder() {
-  axios
-    .delete(
-      `https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
-    )
-    .then(function (response) {
-      console.log(response.data);
-    });
-}
-
-// 刪除特定訂單
-function deleteOrderItem(orderId) {
-  axios
-    .delete(
-      `https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders/${orderId}`,
-      {
-        headers: {
-          Authorization: token,
-        },
-      }
-    )
-    .then(function (response) {
-      console.log(response.data);
-    });
-}
-
-// C3.js
-let chart = c3.generate({
-  bindto: "#chart", // HTML 元素綁定
-  data: {
-    type: "pie",
-    columns: [
-      ["Louvre 雙人床架", 1],
-      ["Antony 雙人床架", 2],
-      ["Anty 雙人床架", 3],
-      ["其他", 4],
-    ],
-    colors: {
-      "Louvre 雙人床架": "#DACBFF",
-      "Antony 雙人床架": "#9D7FEA",
-      "Anty 雙人床架": "#5434A7",
-      其他: "#301E5F",
-    },
-  },
+const discardAllBtn = document.querySelector(".discardAllBtn");
+discardAllBtn.addEventListener("click", function (e) {
+  e.preventDefault();
+  Swal.fire({
+    title: "確定要將所有訂單刪除嗎?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "確定",
+    cancelButtonText: "取消",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      axios
+        .delete(
+          `https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
+          {
+            headers: {
+              Authorization: token,
+            },
+          }
+        )
+        .then(function (response) {
+          console.log(response.data);
+          getOrderList();
+          Swal.fire({
+            title: "刪除成功",
+            text: "您已將訂單全部清除",
+            icon: "success",
+          });
+        })
+        .catch(function (error) {
+          console.error("刪除失敗", error);
+          Swal.fire({
+            title: "刪除失敗",
+            text: "已無訂單可刪除",
+            icon: "error",
+          });
+        });
+    }
+  });
 });
