@@ -62,6 +62,17 @@ function getOrderList() {
 
 orderList.addEventListener("click", function (e) {
   e.preventDefault();
+  const targetClass = e.target.getAttribute("class");
+  console.log(targetClass);
+
+  if (targetClass == "delSingleOrder-Btn js-orderDelete") {
+    alert("你點到刪除按鈕");
+    return;
+  }
+  if (targetClass == "js-orderStatus") {
+    alert("你點到訂單狀態");
+    return;
+  }
 });
 
 // 修改訂單狀態
