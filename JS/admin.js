@@ -27,14 +27,62 @@ function renderC3() {
     ary.push(item);
     ary.push(total[item]);
     newData.push(ary);
-    console.log(total);
   });
 
   let chart = c3.generate({
-    bindto: "#chart", // HTML 元素綁定
+    bindto: "#categoryChart", // HTML 元素綁定
     data: {
       type: "pie",
       columns: newData,
+    },
+  });
+}
+
+function renderC3_allProductChart() {
+  //物件資料蒐集
+  let obj = {};
+  orderData.forEach(function (item) {
+    item.products.forEach(function (productItem) {
+      if (obj[productItem.title] === undefined) {
+        obj[productItem.title] = productItem.quantity * productItem.price;
+      } else {
+        obj[productItem.title] += productItem.quantity * productItem.price;
+      }
+    });
+  });
+
+  let originAry = Object.keys(obj);
+  let rankSortAry = [];
+
+  originAry.forEach(function (item) {
+    let ary = [];
+    ary.push(item);
+    ary.push(obj[item]);
+    rankSortAry.push(ary);
+  });
+
+  rankSortAry.sort(function (a, b) {
+    return b[1] - a[1];
+  });
+
+  if (rankSortAry.length > 3) {
+    let otherTotal = 0;
+    rankSortAry.forEach(function (item, index) {
+      if (index > 2) {
+        otherTotal += rankSortAry[index][1];
+      }
+    });
+    rankSortAry.splice(3, rankSortAry.length - 1);
+    rankSortAry.push(["其他", otherTotal]);
+  }
+  c3.generate({
+    bindto: "#allProductChart",
+    data: {
+      columns: rankSortAry,
+      type: "pie",
+    },
+    color: {
+      pattern: ["#301E5F", "#5434A7", "#9D7FEA", "#DACBFF"],
     },
   });
 }
@@ -97,6 +145,7 @@ function getOrderList() {
       });
       orderList.innerHTML = str;
       renderC3();
+      renderC3_allProductChart();
     });
 }
 
@@ -236,4 +285,25 @@ discardAllBtn.addEventListener("click", function (e) {
         });
     }
   });
+});
+
+// 切換圖表選單
+const chartSelector = document.querySelector(".chartSelector");
+const chartTitle = document.querySelector(".section-title");
+const categoryChart = document.querySelector(".categoryChart");
+const allProductChart = document.querySelector(".allProductChart");
+
+chartSelector.addEventListener("change", function (e) {
+  const optionValue = e.target.value;
+
+  if (optionValue === "全品項營收比重") {
+    categoryChart.style.display = "block";
+    allProductChart.style.display = "none";
+  } else if (optionValue === "全產品類別營收比重") {
+    allProductChart.style.display = "block";
+    categoryChart.style.display = "none";
+  } else {
+    allProductChart.style.display = "block";
+    categoryChart.style.display = "block";
+  }
 });
