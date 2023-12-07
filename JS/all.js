@@ -280,34 +280,34 @@ const form = document.querySelector(".orderInfo-form");
 const constraints = {
   姓名: {
     presence: {
-      message: "必填欄位",
+      message: "必填",
     },
   },
   電話: {
     presence: {
-      message: "必填欄位",
+      message: "必填",
     },
     length: {
       minimum: 8,
-      message: "需超過 8 碼",
+      message: "請確認輸入超過8碼",
     },
   },
-  信箱: {
+  Email: {
     presence: {
-      message: "必填欄位",
+      message: "必填",
     },
     email: {
-      message: "格式錯誤",
+      message: "請確認格式是否正確",
     },
   },
   寄送地址: {
     presence: {
-      message: "必填欄位",
+      message: "必填",
     },
   },
   交易方式: {
     presence: {
-      message: "必填欄位",
+      message: "必填",
     },
   },
 };
